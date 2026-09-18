@@ -1,0 +1,13 @@
+{
+  "name": "kodernet-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:auth": "npm --prefix services/auth-service install",
+    "dev:auth": "npm --prefix services/auth-service run dev",
+    "start:auth": "npm --prefix services/auth-service start",
+    "prisma:generate": "npm --prefix services/auth-service run prisma:generate",
+    "prisma:migrate": "npm --prefix services/auth-service run prisma:migrate",
+    "seed:auth": "npm --prefix services/auth-service run seed"
+  }
+}

@@ -1,0 +1,32 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    container_name: kodernet-auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kodernet_auth
+      POSTGRES_USER: kodernet
+      POSTGRES_PASSWORD: kodernet_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: kodernet-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      DATABASE_URL: postgresql://kodernet:kodernet_dev_password@auth-db:5432/kodernet_auth?schema=public
+      JWT_SECRET: change_this_development_secret_before_production
+      JWT_EXPIRES_IN: 1h
+    ports:
+      - "4001:4001"
+    depends_on:
+      - auth-db
+
+volumes:
+  auth-postgres-data:

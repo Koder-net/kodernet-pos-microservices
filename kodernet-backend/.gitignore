@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+.DS_Store
+.vscode/
+.idea/
+services/auth-service/prisma/dev.db
