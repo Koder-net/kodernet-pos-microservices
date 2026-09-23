@@ -14,12 +14,18 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is required.");
+  process.exit(1);
+}
+
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
+
     res.json({
       service: "auth-service",
       status: "healthy",
@@ -37,19 +43,27 @@ app.get("/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found." });
+  res.status(404).json({
+    message: "Route not found."
+  });
 });
 
 app.use((error, req, res, next) => {
   console.error(error);
-  res.status(500).json({ message: "Internal server error." });
+
+  res.status(500).json({
+    message: "Internal server error."
+  });
 });
 
 async function start() {
   try {
     await prisma.$connect();
+
     app.listen(PORT, () => {
-      console.log(`KODERNET Auth Service running on port ${PORT}`);
+      console.log(
+        `KODERNET Auth Service running on port ${PORT}`
+      );
     });
   } catch (error) {
     console.error("Failed to start Auth Service:", error);

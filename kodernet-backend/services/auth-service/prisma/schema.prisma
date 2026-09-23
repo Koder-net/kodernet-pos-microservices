@@ -15,17 +15,36 @@ enum Role {
   DRIVER
 }
 
+model Tenant {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+
+  @@index([active])
+  @@map("tenants")
+}
+
 model User {
   id           String        @id @default(uuid()) @db.Uuid
-  username     String        @unique
+  tenantId     String        @db.Uuid
+  username     String
   passwordHash String
   role         Role
   active       Boolean       @default(true)
   branchId     String?       @db.Uuid
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branches     UserBranch[]
 
+  @@unique([tenantId, username])
+  @@index([tenantId])
   @@index([role])
   @@index([active])
   @@index([branchId])

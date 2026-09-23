@@ -35,32 +35,42 @@ Roles are hard-coded:
 - technician
 - driver
 
-An authorized administrator creates staff accounts and assigns their role and branch access.
+Users belong to a tenant.
 
-## Run with Docker
+An authorized administrator creates staff accounts and assigns their role and branch access within their own tenant.
 
-```bash
-docker compose up --build
-```
+## Multi-tenant design
 
-The Auth Service will be available on port `4001`.
+KODERNET uses tenant-based data isolation.
 
-Health check:
+A tenant represents a separate business or organization using the POS system.
 
-```http
-GET http://localhost:4001/health
-```
+The basic relationship is:
 
-## Run locally
+Tenant
 
-Start PostgreSQL, configure `services/auth-service/.env`, then:
+- Users
+- Branch access
 
-```bash
-npm --prefix services/auth-service install
-npm --prefix services/auth-service run prisma:generate
-npm --prefix services/auth-service run prisma:migrate
-npm --prefix services/auth-service run seed
-npm --prefix services/auth-service run dev
-```
+Each authenticated user belongs to exactly one tenant.
 
-See `services/auth-service/README.md` for API documentation.
+Tenant identity is established during login and included in the authentication JWT.
+
+Services use the authenticated user's tenant identity when accessing tenant-owned data.
+
+### Tenant isolation rule
+
+A user from one tenant must never be able to access data belonging to another tenant.
+
+For example:
+
+```text
+Tenant A
+ ├── Admin A
+ ├── Cashier A
+ └── Products A
+
+Tenant B
+ ├── Admin B
+ ├── Cashier B
+ └── Products B

@@ -4,16 +4,17 @@ Authentication and staff user-management microservice for KODERNET POS 2.0.
 
 ## Responsibilities
 
-- Staff login using username + PIN/password
+- Staff login using tenant slug + username + PIN/password
 - bcrypt credential hashing
 - JWT authentication
+- Tenant-aware authentication
 - Hard-coded RBAC roles
 - Admin-only user creation and management
 - Account activation/deactivation
 - Credential changes
 - Branch assignments
 - Current authenticated user lookup
-
+- Tenant isolation for Auth Service user data
 There is no public self-registration endpoint.
 
 ## Roles
@@ -27,6 +28,11 @@ The roles are hard-coded:
 - `driver`
 
 The API accepts these role names case-insensitively.
+
+## Multi-tenant design
+
+Each user belongs to exactly one tenant.
+
 
 ## Database
 
@@ -84,6 +90,7 @@ Request:
 
 ```json
 {
+  "tenantSlug": "kodernet",
   "username": "admin",
   "pin": "1234"
 }
@@ -200,19 +207,21 @@ Content-Type: application/json
 
 ## Authentication flow
 
-```text
 Client
   |
-  | username + PIN/password
+  | tenant slug + username + PIN/password
   v
 Auth Service
   |
-  | find user
-  | check active status
+  | find tenant
+  | check tenant active status
+  | find user inside tenant
+  | check user active status
   | bcrypt verification
   v
 JWT generated
   |
+  | contains tenantId
   v
 Client
   |
@@ -222,25 +231,36 @@ Protected service endpoint
   |
   | JWT verification
   v
-Authorization / role check
-```
+Authenticated user
+  |
+  | tenantId
+  | role
+  | branchId
+  v
+Tenant / role authorization
 
 ## Bootstrap administrator
 
-There is no public sign-up.
+There is no public sign-up and there is no SUPER_ADMIN role in the current design.
 
-For development, the seed script creates or updates an initial admin:
+The initial tenant and administrator are created through the seed/setup process.
 
-```text
-username: admin
+The initial tenant and administrator are created through the seed/setup process.
+
+Tenant name: Kodernet Electronics
+Tenant slug: kodernet
+
+Username: admin
 PIN: 1234
-```
+Role: admin
 
 These are development defaults only.
 
 You can override them with:
 
 ```text
+SEED_TENANT_NAME
+SEED_TENANT_SLUG
 SEED_ADMIN_USERNAME
 SEED_ADMIN_PIN
 ```
@@ -248,7 +268,11 @@ SEED_ADMIN_PIN
 Example:
 
 ```bash
-SEED_ADMIN_USERNAME=admin SEED_ADMIN_PIN=9876 npm run seed
+SEED_TENANT_NAME="Kodernet Electronics" \
+SEED_TENANT_SLUG=kodernet \
+SEED_ADMIN_USERNAME=admin \
+SEED_ADMIN_PIN=9876 \
+npm run seed
 ```
 
 Do not use the development PIN in production.
